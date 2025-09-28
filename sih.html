@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>EcoGo+ — AI-Verified Carbon Wallet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ---------- AUTH PAGE ---------- */
+    :root{
+      --bg: #f6fbf6;
+      --accent: #0f9d58;
+      --accent-2: #16a34a;
+      --radius: 14px;
+      --shadow: 0 6px 18px rgba(15,23,42,.08);
+      font-family: "Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+    .auth-card{background:#fff;padding:32px 28px;border-radius:var(--radius);box-shadow:var(--shadow);width:100%;max-width:360px}
+    .auth-card h2{margin:0 0 24px;font-size:1.5rem}
+    .auth-card input{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:12px;font-size:1rem}
+    .auth-card button{width:100%;padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:1rem}
+    .btn-primary{background:var(--accent);color:#fff}
+    .error{color:#e11d48;font-size:.875rem;margin-bottom:12px}
+    .hint{font-size:.875rem;color:#6b7280;margin-top:12px;text-align:center}
+    /* ---------- MAIN APP ---------- */
+    .container{max-width:1100px;margin:0 auto}
+    header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;color:white;font-weight:700;box-shadow:0 8px 30px rgba(2,6,23,.06)}
+    .title{font-size:1.125rem;font-weight:700}
+    .tagline{font-size:0.9rem;color:#6b7280}
+    nav{display:flex;gap:12px;align-items:center}
+    nav button{background:none;border:1px solid transparent;padding:8px 12px;border-radius:10px;cursor:pointer}
+    nav button:hover{background:rgba(0,0,0,.03)}
+    .grid{display:grid;grid-template-columns:1fr;gap:18px}
+    @media(min-width:880px){.grid{grid-template-columns:380px 1fr}}
+    .left{display:flex;flex-direction:column;gap:16px}
+    .card{background:#fff;padding:16px;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .wallet-balance{display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .wallet-info .label{font-size:0.9rem;color:#6b7280}
+    .wallet-info .value{font-size:1.75rem;font-weight:700}
+    .small{font-size:0.875rem;color:#6b7280}
+    .progress{margin-top:12px}
+    .progress .bar{height:12px;background:linear-gradient(90deg,#e6f5ea,#f0fff3);border-radius:999px;overflow:hidden}
+    .progress .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:999px;transition:width 800ms cubic-bezier(.2,.9,.2,1)}
+    .leaderboard li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #eef2f7}
+    .leaderboard li:last-child{border-bottom:none}
+    .right{display:flex;flex-direction:column;gap:16px}
+    .hero{display:flex;gap:16px;align-items:center;justify-content:space-between}
+    .hero-left{max-width:62%}
+    .hero h1{margin:0;font-size:1.5rem}
+    .hero p{margin:8px 0;color:#6b7280}
+    .cta{display:flex;gap:8px;margin-top:12px}
+    .btn{border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600}
+    .btn-primary{background:var(--accent);color:#fff;box-shadow:0 6px 18px rgba(15,157,88,.16)}
+    .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,.06)}
+    .list{display:grid;gap:12px}
+    .challenge{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:12px;border:1px solid #f0f4f1;transition:transform 160ms ease,box-shadow 160ms ease}
+    .challenge:hover{transform:translateY(-6px);box-shadow:0 8px 30px rgba(2,6,23,.06)}
+    .badge{background:rgba(22,163,74,.12);color:var(--accent-2);padding:6px 8px;border-radius:8px;font-weight:600;font-size:0.85rem}
+    .muted{color:#6b7280;font-size:0.9rem}
+    .row{display:flex;gap:12px;align-items:center}
+    footer{margin-top:30px;text-align:center;color:#6b7280;font-size:0.9rem}
+    /* image proof */
+    .proof-area{margin-top:12px;display:flex;gap:8px;align-items:center}
+    .proof-img{max-width:100px;max-height:100px;border-radius:8px;border:1px solid #e5e7eb}
+    @media(max-width:600px){.hero-left{max-width:100%}.wallet-info .value{font-size:1.4rem}body{padding:14px}}
+  </style>
+</head>
+<body>
+  <!-- ================= AUTH GATE ================= -->
+  <div id="authGate" class="auth-card">
+    <h2>Welcome to EcoGo+</h2>
+    <form id="authForm" autocomplete="off">
+      <input id="nameIn" type="text" placeholder="Your Name" required>
+      <input id="emailIn" type="text" placeholder="E-mail" required>
+      <input id="passIn" type="password" placeholder="Password" required>
+      <div id="err" class="error" hidden>Wrong credentials</div>
+      <button type="submit" class="btn-primary">Sign in / Sign up</button>
+    </form>
+    <div class="hint">Default: e-mail = 123 &nbsp;•&nbsp; password = 123</div>
+  </div>
+
+  <!-- ================= MAIN APP ================= -->
+  <div id="app" style="display:none;width:100%">
+    <div class="container">
+      <header>
+        <div class="brand">
+          <div class="logo">EG+</div>
+          <div>
+            <div class="title">EcoGo+</div>
+            <div class="tagline">Gamified Carbon Wallet</div>
+          </div>
+        </div>
+        <nav>
+          <button id="btnProfile">Profile</button>
+          <button id="btnChallenges">Challenges</button>
+          <button id="btnRewards">Rewards</button>
+        </nav>
+        <div style="font-weight:600" id="userTopName"></div>
+      </header>
+
+      <main class="grid">
+        <section class="left">
+          <div class="card" id="walletCard">
+            <div class="wallet-balance">
+              <div class="wallet-info">
+                <div class="label">Carbon Wallet</div>
+                <div class="value" id="coins">0 EcoCoins</div>
+              </div>
+              <div class="row">
+                <div class="badge" title="EcoCoins">+eco</div>
+              </div>
+            </div>
+            <div class="progress">
+              <div style="display:flex;justify-content:space-between">
+                <div class="small">CO₂ Progress</div>
+                <div class="small" id="progressPercent">0%</div>
+              </div>
+              <div class="bar" aria-hidden>
+                <div class="fill" id="progressFill" style="width:0%"></div>
+              </div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;">
+              <button class="btn btn-primary" id="btnAddMock">+ Earn (demo)</button>
+              <button class="btn btn-ghost" id="btnReset">Reset</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-weight:700" id="profileName">Guest</div>
+                <div class="muted" id="profileMeta">Age: -- • City: --</div>
+              </div>
+              <button class="btn btn-ghost" id="editProfile">Edit</button>
+            </div>
+            <div style="margin-top:12px" class="small">Update your name, age & city — data stored locally.</div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:700">Leaderboard</div>
+              <div class="muted">Local</div>
+            </div>
+            <ul class="leaderboard" id="leaderboardList" style="margin-top:12px;padding-left:0;list-style:none"></ul>
+          </div>
+        </section>
+
+        <section class="right">
+          <div class="card hero">
+            <div class="hero-left">
+              <h1>Track, Earn, & Redeem — Make sustainability rewarding</h1>
+              <p>Complete daily eco challenges, upload AI-verified proof, earn EcoCoins and redeem rewards. 100% private – no data leaves your device.</p>
+              <div class="cta">
+                <button class="btn btn-primary" id="ctaAccept">See Challenges</button>
+                <button class="btn btn-ghost" id="ctaRewards">Rewards</button>
+              </div>
+            </div>
+            <div style="min-width:160px;text-align:center">
+              <svg width="96" height="96" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <rect width="24" height="24" rx="8" fill="url(#g)"/>
+                <path d="M8 13s1-3 4-3 4 3 4 3" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 7v6" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16a34a"/><stop offset="1" stop-color="#0f9d58"/></linearGradient></defs>
+              </svg>
+              <div class="muted" style="margin-top:8px">Your eco progress</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:700">Challenges</div>
+              <div class="muted">Accept → Upload proof → AI verifies</div>
+            </div>
+            <div class="list" id="challengesList" style="margin-top:12px"></div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:700">Rewards Store</div>
+              <div class="muted">Redeem with EcoCoins</div>
+            </div>
+            <div class="list" id="rewardsList" style="margin-top:12px"></div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="container">
+        <div>Built with ♥ for sustainable habits • AI image verification runs locally in your browser – no data uploaded.</div>
+      </footer>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="modal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.4)">
+      <div style="background:white;padding:18px;border-radius:12px;min-width:260px;box-shadow:0 8px 30px rgba(2,6,23,.06)">
+        <h3 style="margin:0 0 8px 0">Edit Profile</h3>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <input id="inName" placeholder="Name" style="padding:10px;border-radius:8px;border:1px solid #eef2f7" />
+          <input id="inAge" placeholder="Age" style="padding:10px;border-radius:8px;border:1px solid #eef2f7" inputmode="numeric"/>
+          <input id="inCity" placeholder="City" style="padding:10px;border-radius:8px;border:1px solid #eef2f7" />
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-ghost" id="modalCancel">Cancel</button>
+            <button class="btn btn-primary" id="modalSave">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TensorFlow.js for image classification ========== -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@latest/dist/mobilenet.min.js"></script>
+
+  <!-- ========== AUTH + APP LOGIC ========== -->
+  <script>
+    /* --------------- AUTH --------------- */
+    const AUTH_KEY='eco_auth';
+    const authGate=document.getElementById('authGate');
+    const app=document.getElementById('app');
+    const err=document.getElementById('err');
+    document.getElementById('authForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      const name=document.getElementById('nameIn').value.trim();
+      const email=document.getElementById('emailIn').value.trim();
+      const pass=document.getElementById('passIn').value.trim();
+      if((email==='123' && pass==='123') || (email && pass)){
+        localStorage.setItem(AUTH_KEY,'true');
+        localStorage.setItem('eco_user_name',name||'Guest');
+        authGate.style.display='none';
+        app.style.display='block';
+        renderProfile();renderWallet();renderLeaderboard();renderChallenges();renderRewards();
+      }else{
+        err.hidden=false;
+      }
+    });
+    function checkAuth(){
+      if(localStorage.getItem(AUTH_KEY)==='true'){
+        authGate.style.display='none';app.style.display='block';
+        renderProfile();renderWallet();renderLeaderboard();renderChallenges();renderRewards();
+      }
+    }
+
+    /* --------------- APP DATA --------------- */
+    const DEFAULT_CHALLENGES=[
+      {id:'c1',title:'Walk 2 km',desc:'Walk 2 km instead of driving',reward:10,accepted:false,completed:false,keywords:['walking','shoe','walk','foot']},
+      {id:'c2',title:'Use Cycle',desc:'Cycle for short commute',reward:15,accepted:false,completed:false,keywords:['bicycle','bike','cycle','cycling']},
+      {id:'c3',title:'Plant a Tree',desc:'Plant a tree and log it',reward:50,accepted:false,completed:false,keywords:['tree','plant','sapling','forest']},
+      {id:'c4',title:'No Plastic Day',desc:'Avoid single-use plastics today',reward:8,accepted:false,completed:false,keywords:['plastic','bottle','bag','container']}
+    ];
+    const DEFAULT_REWARDS=[
+      {id:'r1',title:'10% Off e-Voucher',desc:'Redeem at partner store',cost:100},
+      {id:'r2',title:'Badge: Tree Planter',desc:'Digital badge for planting',cost:40},
+      {id:'r3',title:'Coffee Coupon',desc:'Free coffee at partner cafe',cost:80}
+    ];
+    const K_USER='eco_user',K_COINS='eco_coins',K_CH='eco_challenges',K_RW='eco_rewards',K_LB='eco_leaderboard';
+    const byId=id=>document.getElementById(id);
+    function readJSON(key,fallback){const raw=localStorage.getItem(key);if(!raw)return fallback;try{return JSON.parse(raw)}catch(e){return fallback}}
+    function saveJSON(key,obj){localStorage.setItem(key,JSON.stringify(obj))}
+    function seedIfNeeded(){
+      if(!localStorage.getItem(K_COINS))localStorage.setItem(K_COINS,'50');
+      if(!localStorage.getItem(K_CH))saveJSON(K_CH,DEFAULT_CHALLENGES);
+      if(!localStorage.getItem(K_RW))saveJSON(K_RW,DEFAULT_REWARDS);
+      if(!localStorage.getItem(K_USER))saveJSON(K_USER,{name:localStorage.getItem('eco_user_name')||'Guest',age:'--',city:'--'});
+      if(!localStorage.getItem(K_LB))saveJSON(K_LB,[{name:localStorage.getItem('eco_user_name')||'Guest',coins:parseInt(localStorage.getItem(K_COINS)||'0')},{name:'Alex',coins:120},{name:'Sam',coins:90}]);
+    }
+
+    /* --------------- RENDERERS --------------- */
+    function renderProfile(){
+      const user=readJSON(K_USER,{name:'Guest',age:'--',city:'--'});
+      byId('profileName').textContent=user.name;
+      byId('userTopName').textContent=user.name;
+      byId('profileMeta').textContent=`Age: ${user.age} • City: ${user.city}`;
+      byId('inName').value=user.name;byId('inAge').value=user.age;byId('inCity').value=user.city;
+    }
+    function renderWallet(){
+      const coins=parseInt(localStorage.getItem(K_COINS)||'0',10);
+      byId('coins').textContent=`${coins} EcoCoins`;
+      const pct=Math.min(100,Math.round((coins/200)*100));
+      byId('progressPercent').textContent=`${pct}%`;
+      byId('progressFill').style.width=`${pct}%`;
+    }
+    function renderLeaderboard(){
+      const board=readJSON(K_LB,[]);
+      const ul=byId('leaderboardList');ul.innerHTML='';
+      board.forEach((e,i)=>{
+        const li=document.createElement('li');
+        li.innerHTML=`<div style="display:flex;gap:12px;align-items:center">
+          <div style="width:32px;height:32px;border-radius:8px;background:#eef8f0;color:var(--accent-2);display:grid;place-items:center;font-weight:700">${i+1}</div>
+          <div style="flex:1"><strong>${e.name}</strong><div class="small" style="color:var(--muted)">${e.coins} coins</div></div>
+          <div>${e.coins} <span class="muted">coins</span></div>
+        </div>`;
+        ul.appendChild(li);
+      });
+    }
+    function renderChallenges(){
+      const arr=readJSON(K_CH,[]);
+      const wrap=byId('challengesList');wrap.innerHTML='';
+      arr.forEach(ch=>{
+        const el=document.createElement('div');el.className='challenge';
+        el.innerHTML=`
+          <div>
+            <div style="font-weight:700">${ch.title}</div>
+            <div class="muted">${ch.desc}</div>
+            ${ch.completed?`<div class="proof-area"><img class="proof-img" src="${ch.proofURL||''}" alt="proof"/><span>✅ Verified</span></div>`:''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+            <div class="badge">${ch.reward}c</div>
+            <div class="row">
+              <button class="btn btn-ghost" ${ch.accepted?'disabled':''} data-act="accept" data-id="${ch.id}">${ch.accepted?'Accepted':'Accept'}</button>
+              ${ch.accepted && !ch.completed?`<button class="btn btn-primary" data-upload="${ch.id}">Upload proof</button>`:''}
+              ${ch.completed?'<button class="btn btn-ghost" disabled>Done</button>':''}
+            </div>
+          </div>`;
+        wrap.appendChild(el);
+      });
+      wrap.querySelectorAll('button[data-act]').forEach(b=>b.onclick=()=>acceptChallenge(b.dataset.id));
+      wrap.querySelectorAll('button[data-upload]').forEach(b=>b.onclick=()=>openUploader(b.dataset.id));
+    }
+    function renderRewards(){
+      const arr=readJSON(K_RW,[]);
+      const wrap=byId('rewardsList');wrap.innerHTML='';
+      const coins=parseInt(localStorage.getItem(K_COINS)||'0',10);
+      arr.forEach(r=>{
+        const el=document.createElement('div');el.className='challenge';
+        el.innerHTML=`
+          <div>
+            <div style="font-weight:700">${r.title}</div>
+            <div class="muted">${r.desc}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+            <div class="muted">${r.cost} coins</div>
+            <button class="btn btn-primary" ${coins>=r.cost?'':'disabled'} data-redeem="${r.id}">Redeem</button>
+          </div>`;
+        wrap.appendChild(el);
+      });
+      wrap.querySelectorAll('button[data-redeem]').forEach(b=>b.onclick=()=>redeemReward(b.dataset.redeem));
+    }
+
+    /* --------------- ACTIONS --------------- */
+    function acceptChallenge(id){
+      const arr=readJSON(K_CH,[]);
+      const idx=arr.findIndex(x=>x.id===id);if(idx===-1)return;
+      arr[idx].accepted=true;arr[idx].acceptedAt=new Date().toISOString();
+      saveJSON(K_CH,arr);renderChallenges();
+    }
+    function redeemReward(id){
+      const arr=readJSON(K_RW,[]);
+      const r=arr.find(x=>x.id===id);
+      if(!r){alert('Reward not found');return;}
+      let coins=parseInt(localStorage.getItem(K_COINS)||'0',10);
+      if(coins<r.cost){alert('Not enough EcoCoins');return;}
+      coins-=r.cost;localStorage.setItem(K_COINS,coins);
+      alert(`Redeemed "${r.title}" — (demo).`);
+      const user=readJSON(K_USER,{name:'Guest'});
+      const lb=readJSON(K_LB,[]);
+      const existing=lb.find(e=>e.name===user.name);
+      if(existing)existing.coins=coins;
+      saveJSON(K_LB,lb);
+      renderWallet();renderLeaderboard();renderRewards();
+    }
+    function addMockCoins(n=10){
+      const current=parseInt(localStorage.getItem(K_COINS)||'0',10);
+      const newCoins=current+n;
+      localStorage.setItem(K_COINS,newCoins);
+      const user=readJSON(K_USER,{name:'Guest'});
+      const lb=readJSON(K_LB,[]);
+      const existing=lb.find(e=>e.name===user.name);
+      if(existing)existing.coins=newCoins;else lb.push({name:user.name,coins:newCoins});
+      lb.sort((a,b)=>b.coins-a.coins);
+      saveJSON(K_LB,lb);
+      renderWallet();renderLeaderboard();renderRewards();
+    }
+    function resetAll(){if(!confirm('Reset demo data to defaults?'))return;
+      ['eco_auth',K_COINS,K_CH,K_RW,K_USER,K_LB].forEach(k=>localStorage.removeItem(k));
+      location.reload();
+    }
+    function showModal(show=true){document.getElementById('modal').style.display=show?'flex':'none'}
+    function saveProfile(){
+      const name=byId('inName').value.trim()||'Guest';
+      const age=byId('inAge').value.trim()||'--';
+      const city=byId('inCity').value.trim()||'--';
+      saveJSON(K_USER,{name,age,city});
+      localStorage.setItem('eco_user_name',name);
+      const lb=readJSON(K_LB,[]);
+      const prev=lb.find(e=>e.name==='Guest');
+      if(prev&&name!=='Guest')prev.name=name;
+      saveJSON(K_LB,lb);
+      renderProfile();renderLeaderboard();
+      showModal(false);
+    }
+
+    /* --------------- AI IMAGE VERIFICATION --------------- */
+    let mobilenetModel;
+    async function loadModel(){
+      mobilenetModel=await mobilenet.load();
+    }
+    loadModel();
+
+    function openUploader(challengeId){
+      const input=document.createElement('input');
+      input.type='file';input.accept='image/*';
+      input.onchange=async e=>{
+        const file=e.target.files[0];if(!file)return;
+        const img=document.createElement('img');
+        img.src=URL.createObjectURL(file);
+        img.onload=async()=>{
+          const predictions=await mobilenetModel.classify(img);
+          const top=predictions[0].className.toLowerCase();
+          const ch=readJSON(K_CH,[]).find(x=>x.id===challengeId);
+          const matched=ch.keywords.some(kw=>top.includes(kw));
+          if(matched){
+            completeChallenge(challengeId,img.src);
+          }else{
+            alert('AI could not verify this image against the challenge. Try a clearer photo.');
+          }
+        };
+      };
+      input.click();
+    }
+    function completeChallenge(id,proofURL){
+      const arr=readJSON(K_CH,[]);
+      const idx=arr.findIndex(x=>x.id===id);if(idx===-1)return;
+      if(!arr[idx].accepted){alert('Accept the challenge first');return;}
+      if(arr[idx].completed)return;
+      arr[idx].completed=true;arr[idx].proofURL=proofURL;
+      saveJSON(K_CH,arr);
+      const reward=parseInt(arr[idx].reward||0,10);
+      const coins=parseInt(localStorage.getItem(K_COINS)||'0',10)+reward;
+      localStorage.setItem(K_COINS,coins);
+      const user=readJSON(K_USER,{name:'Guest'});
+      const lb=readJSON(K_LB,[]);
+      const existing=lb.find(e=>e.name===user.name);
+      if(existing)existing.coins=coins;else lb.push({name:user.name,coins});
+      lb.sort((a,b)=>b.coins-a.coins);
+      saveJSON(K_LB,lb);
+      renderWallet();renderLeaderboard();renderChallenges();
+      alert(`Challenge verified! You earned ${reward} EcoCoins.`);
+    }
+
+    /* --------------- INIT --------------- */
+    function init(){
+      seedIfNeeded();
+      renderProfile();renderWallet();renderLeaderboard();renderChallenges();renderRewards();
+      byId('editProfile').onclick=()=>showModal(true);
+      byId('modalCancel').onclick=()=>showModal(false);
+      byId('modalSave').onclick=saveProfile;
+      byId('btnProfile').onclick=()=>showModal(true);
+      byId('btnChallenges').onclick=()=>{window.scrollTo({top:0,behavior:'smooth'});byId('ctaAccept').focus();};
+      byId('btnRewards').onclick=()=>{window.scrollTo({top:0,behavior:'smooth'});byId('ctaRewards').focus();};
+      byId('ctaAccept').onclick=()=>window.scrollTo({top:document.getElementById('challengesList').offsetTop-60,behavior:'smooth'});
+      byId('ctaRewards').onclick=()=>window.scrollTo({top:document.getElementById('rewardsList').offsetTop-60,behavior:'smooth'});
+      byId('btnAddMock').onclick=()=>addMockCoins(12);
+      byId('btnReset').onclick=resetAll;
+    }
+    checkAuth();
+  </script>
+</body>
+</html>
